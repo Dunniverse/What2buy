@@ -96,9 +96,10 @@
           if (val === null || max === min) continue;
           let normalized;
           if (dir === 'high') {
-            normalized = (val - min) / (max - min) * 10;
+            normalized = ((val - min) / (max - min)) * 10;
           } else {
-            normalized = (max - val) / (max - min) * 10;
+            normalized = ((val - min) / (max - min)) * 10;
+            normalized = 10 - normalized; // Reverse scale so lower is better
           }
           totals[j] += normalized * w;
         }

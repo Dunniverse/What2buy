@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Product Comparison Tool</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    .highlight { background: #cfffcf; font-weight: bold; }
+    input[type="text"], input[type="number"] { width: 100px; }
+    #generateBtn { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Custom Product Comparison Tool</h2>
+  <p>Step 1: Enter products and features, assign importance weights, and input product scores.</p>
+
+  <label>Number of Products: <input type="number" id="numProducts" value="3" min="1" max="10"></label>
+  <label>Number of Features: <input type="number" id="numFeatures" value="4" min="1" max="10"></label>
+  <button id="generateBtn" onclick="generateTable()">Generate Table</button>
+
+  <div id="tableContainer"></div>
+
+  <script>
+    function generateTable() {
+      const numProducts = parseInt(document.getElementById('numProducts').value);
+      const numFeatures = parseInt(document.getElementById('numFeatures').value);
+      const container = document.getElementById('tableContainer');
+      container.innerHTML = '';
+
+      const table = document.createElement('table');
+      const thead = table.createTHead();
+      const headerRow = thead.insertRow();
+      headerRow.insertCell().outerHTML = '<th>Feature ↓ / Product →</th>';
+      headerRow.insertCell().outerHTML = '<th>Weight</th>';
+
+      for (let j = 0; j < numProducts; j++) {
+        const cell = headerRow.insertCell();
+        cell.innerHTML = `<input type="text" id="product_${j}" placeholder="Product ${j+1}">`;
+      }
+
+      const tbody = table.createTBody();
+      for (let i = 0; i < numFeatures; i++) {
+        const row = tbody.insertRow();
+        row.insertCell().innerHTML = `<input type="text" id="feature_${i}" placeholder="Feature ${i+1}">`;
+        row.insertCell().innerHTML = `<input type="number" id="w${i}" value="1" min="1" max="5">`;
+        for (let j = 0; j < numProducts; j++) {
+          row.insertCell().innerHTML = `<input type="number" id="s${i}_${j}" value="5" min="1" max="10">`;
+        }
+      }
+
+      const totalRow = tbody.insertRow();
+      totalRow.insertCell().outerHTML = '<td><b>Total Score</b></td>';
+      totalRow.insertCell();
+      for (let j = 0; j < numProducts; j++) {
+        const td = document.createElement('td');
+        td.id = `t${j}`;
+        td.textContent = '0';
+        totalRow.appendChild(td);
+      }
+
+      const button = document.createElement('button');
+      button.textContent = 'Calculate Scores';
+      button.onclick = () => calculate(numFeatures, numProducts);
+      container.appendChild(table);
+      container.appendChild(button);
+    }
+
+    function calculate(features, products) {
+      let totals = Array(products).fill(0);
+      for(let i = 0; i < features; i++) {
+        const w = parseFloat(document.getElementById(`w${i}`).value);
+        for(let j = 0; j < products; j++) {
+          const s = parseFloat(document.getElementById(`s${i}_${j}`).value);
+          totals[j] += w * s;
+        }
+      }
+      for(let j = 0; j < products; j++) {
+        const cell = document.getElementById(`t${j}`);
+        cell.textContent = totals[j].toFixed(1);
+        cell.className = totals[j] === Math.max(...totals) ? 'highlight' : '';
+      }
+    }
+
+    // Auto-generate default on load
+    window.onload = generateTable;
+  </script>
+</body>
+</html>

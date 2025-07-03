@@ -14,17 +14,18 @@
 </head>
 <body>
   <h2>What2Buy product comparison tool</h2>
-  <p>Step 1: Enter products and features, assign importance weights, score direction, and input raw values.</p>
+  <p>Step 1: Enter products and features, assign importance weights (1–10), score direction, and input raw values.</p>
 
   <label>Number of Products: <input type="number" id="numProducts" value="3" min="1" max="10"></label>
   <label>Number of Features: <input type="number" id="numFeatures" value="4" min="1" max="10"></label>
   <button id="generateBtn" onclick="generateTable()">Generate Table</button>
 
-<div>
-  <input type="text" id="categoryInput" placeholder="e.g. electric bikes">
-  <button onclick="getSuggestions()">Suggest Products</button>
-</div>
-  
+  <!-- NEW SUGGESTION INPUT -->
+  <div>
+    <input type="text" id="categoryInput" placeholder="e.g. electric bikes">
+    <button onclick="getSuggestions()">Suggest Products</button>
+  </div>
+
   <div id="tableContainer"></div>
 
   <script>
@@ -38,7 +39,7 @@
       const thead = table.createTHead();
       const headerRow = thead.insertRow();
       headerRow.insertCell().outerHTML = '<th>Feature ↓ / Product →</th>';
-      headerRow.insertCell().outerHTML = '<th>Weight</th>';
+      headerRow.insertCell().outerHTML = '<th>Weight (1–10)</th>';
       headerRow.insertCell().outerHTML = '<th>Direction</th>';
 
       for (let j = 0; j < numProducts; j++) {
@@ -50,7 +51,7 @@
       for (let i = 0; i < numFeatures; i++) {
         const row = tbody.insertRow();
         row.insertCell().innerHTML = `<input type="text" id="feature_${i}" placeholder="Feature ${i+1}">`;
-        row.insertCell().innerHTML = `<input type="text" id="w${i}" placeholder="Weight">`;
+        row.insertCell().innerHTML = `<input type="number" id="w${i}" min="1" max="10" placeholder="1-10">`;
         row.insertCell().innerHTML = `
           <select id="dir${i}">
             <option value="high">Higher is Better</option>
@@ -104,7 +105,7 @@
             normalized = ((val - min) / (max - min)) * 10;
           } else {
             normalized = ((val - min) / (max - min)) * 10;
-            normalized = 10 - normalized; // Reverse scale so lower is better
+            normalized = 10 - normalized;
           }
           totals[j] += normalized * w;
         }
@@ -117,7 +118,50 @@
       }
     }
 
-    // Auto-generate default on load
+    async function getSuggestions() {
+      console.log("Button clicked");
+
+      const category = document.getElementById('categoryInput').value;
+      if (!category) return alert("Please enter a category");
+
+      const response = await fetch("https://what-2-buy-backend-jamesbdunnigan.replit.app/suggest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ category })
+      });
+
+      const data = await response.json();
+      if (!data.suggestions) {
+        alert("No suggestions returned.");
+        return;
+      }
+
+      const suggestions = data.suggestions.split('\n\n');
+      suggestions.forEach((entry, index) => {
+        const nameLine = entry.split('\n')[0];
+        const featureLine = entry.split('\n')[1] || "";
+
+        const name = nameLine.replace(/^\d+\.\s*/, '');
+        const feature = featureLine.replace(/^Key Feature:\s*/, '');
+
+        const productInput = document.getElementById(`product_${index}`);
+        if (productInput) productInput.value = name;
+
+        const featureInput = document.getElementById(`feature_${index}`);
+        if (featureInput) featureInput.value = "AI Suggested Feature";
+
+        const scoreInput = document.getElementById(`s${index}_${index}`);
+        if (scoreInput) scoreInput.value = 5;
+
+        const weightInput = document.getElementById(`w${index}`);
+        if (weightInput) weightInput.value = 5;
+      });
+
+      console.log("✅ Suggestions added.");
+    }
+
     window.onload = generateTable;
   </script>
 </body>

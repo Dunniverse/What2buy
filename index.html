@@ -20,6 +20,11 @@
   <label>Number of Features: <input type="number" id="numFeatures" value="4" min="1" max="10"></label>
   <button id="generateBtn" onclick="generateTable()">Generate Table</button>
 
+<div>
+  <input type="text" id="categoryInput" placeholder="e.g. electric bikes">
+  <button onclick="getSuggestions()">Suggest Products</button>
+</div>
+  
   <div id="tableContainer"></div>
 
   <script>
